@@ -1,0 +1,42 @@
+apply plugin: 'scala' /* to build scala code. if you have mixed project with 
+                         scala and java, you can add second line with java 
+                         instead of scala */
+
+sourceCompatibility = 1.6
+version = '0.0.1'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+// additional configuration to tag dependencies to be archived with plugin jar
+configurations {
+    includeJars
+}
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.11.6'
+    compile 'org.elasticsearch:elasticsearch:1.5.2'
+    testCompile 'junit:junit:4.11'
+    includeJars 'org.scala-lang:scala-library:2.11.6' // include this dependency
+}
+
+// task to archive plugin jars
+task buildPluginZip(type: Zip, dependsOn:[':jar']) {
+    baseName = 'hello-plugin'
+    classifier = 'plugin'
+    from files(libsDir) // include output dirictory into archive
+    from { configurations.includeJars.collect { it } } // include dependencies to archive
+}
+
+// define artifacts
+artifacts {
+    archives buildPluginZip
+}
+
+task run(type: JavaExec, dependsOn: classes) {
+    main = 'org.elasticsearch.bootstrap.ElasticsearchF'
+    classpath sourceSets.main.runtimeClasspath
+    classpath configurations.runtime
+}
